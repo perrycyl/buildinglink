@@ -15,7 +15,7 @@ class DaysConversion {
     */
 
     constructor(targetDay) {
-        this.targetDay = targetDay; //strings
+        this.targetDay = targetDay.toLowerCase() ; //strings
         this.daysOfWeek = [
             'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
             'saturday'];
@@ -42,9 +42,9 @@ class DaysConversion {
         
 
         // Finds the days to count ahead from current day to find the date.
-        let dayDiff = this.dtCount[this.targetDay] - dayToday + 1
+        let dayDiff = this.dtCount[this.targetDay] - dayToday
         
-        if (dayDiff < 0) {
+        if (dayDiff <= 0) {
             count = 7 - Math.abs(dayDiff)
         } else {
             count = dayDiff
@@ -58,6 +58,13 @@ class DaysConversion {
         return day
 
     }
+};
+
+class SleepMaker {
+    /**
+     * Takes daysAndTimes and finds the next closest day.
+     * 
+     */
 }
 
 

@@ -11,7 +11,7 @@ Date.prototype.addDays = function(days) {
 const dateInputMgmt = (dts) => {
     for (let dt in dts){
         let date = new DaysConversion(dt['day']);
-        dt['date'] = date;
+        dt['date'] = date.day;
         dateInput(dt); // throws errors if date input is invalid.
     }
 };
