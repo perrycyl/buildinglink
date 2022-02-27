@@ -1,6 +1,9 @@
 const { logger } = require('./logger');
 const puppeteer = require('puppeteer');
-const {dateInputMgmt} = require('./onStart');
+const { dateInputMgmt } = require('./onStart');
+const { basketballBLPuppet } = require('./buildingLinkTools');
+const { Credentials } = require('./puppetCredential');
+const { TimeValidator } = require('./timer');
 
 /**
  * 
@@ -22,19 +25,37 @@ const {dateInputMgmt} = require('./onStart');
 
 //### USER input ###
 let daysAndTimes = [
-    {day: "tuesday" , times: [["07:00 PM","08:00 PM"]["08:00 PM", "09:00 PM"]]},
-    {day: "sunday" , times: [["11:00 AM","12:00 PM"]["01:00 PM", "02:00 PM"]]}
+    {day: "tuesday" , times: [["07:00 PM","08:00 PM"],["08:00 PM", "09:00 PM"]]},
+    {day: "sunday" , times: [["11:00 AM","12:00 PM"],["01:00 PM", "02:00 PM"]]}
 ]
 
+let credentials = new Credentials({
+    username: process.env.USERNAME,
+    password: process.env.PASSWORD
+})
 
 // Code below
-logger = logger()
+const logging = logger()
 try {
     dateInputMgmt(daysAndTimes); // Handles all date time inputs manipulates daysAndTimes as needed.
-    sleepManager() // takes daysAndTimes and sets up sleep schedule
-        puppeteerRunner() // Does puppeteer stuff to submit request
+    console.log("Date Time Post setup: ", daysAndTimes);
+    console.log("credentials: ", credentials)
+    const tv = () =>{
+        new TimeValidator(
+            daysAndTimes,
+            basketballBLPuppet,
+            {credentials}
+        );
+    };
+        
+    logging.info('before loop')
+        
+    let runTv = setInterval(
+        tv,
+        1000
+    )
 
 } catch(e) {
-    logger.err("Error occurred: ", e);
+    logging.error("Error occurred: ", e);
 }
 

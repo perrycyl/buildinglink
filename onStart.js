@@ -9,9 +9,11 @@ Date.prototype.addDays = function(days) {
 };
 
 const dateInputMgmt = (dts) => {
-    for (let dt in dts){
+    for (let dt of dts){
         let date = new DaysConversion(dt['day']);
-        dt['date'] = date.day;
+        date = date.day;
+        dt['date'] = DaysConversion.formatDate(date);
+        dt['momentDate'] = date;
         dateInput(dt); // throws errors if date input is invalid.
     }
 };
