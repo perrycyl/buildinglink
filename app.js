@@ -1,9 +1,12 @@
-const { logger } = require('./logger');
+require('dotenv').config()
+
 const puppeteer = require('puppeteer');
 const { dateInputMgmt } = require('./onStart');
-const { basketballBLPuppet } = require('./buildingLinkTools');
+const { BasketballBLPuppet } = require('./buildingLinkTools');
 const { Credentials } = require('./puppetCredential');
 const { TimeValidator } = require('./timer');
+const { logger } = require('./logger');
+const { PuppetBrowser } = require('./puppet');
 
 /**
  * 
@@ -24,38 +27,49 @@ const { TimeValidator } = require('./timer');
  */
 
 //### USER input ###
-let daysAndTimes = [
-    {day: "tuesday" , times: [["07:00 PM","08:00 PM"],["08:00 PM", "09:00 PM"]]},
-    {day: "sunday" , times: [["11:00 AM","12:00 PM"],["01:00 PM", "02:00 PM"]]}
-]
-
-let credentials = new Credentials({
-    username: process.env.USERNAME,
-    password: process.env.PASSWORD
-})
 
 // Code below
-const logging = logger()
-try {
-    dateInputMgmt(daysAndTimes); // Handles all date time inputs manipulates daysAndTimes as needed.
-    console.log("Date Time Post setup: ", daysAndTimes);
-    console.log("credentials: ", credentials)
-    const tv = () =>{
-        new TimeValidator(
+(async () => {
+    // wait for browser to be available
+    const waitForBrowser = await PuppetBrowser.create();
+    logger.info(`BE: ${JSON.stringify(PuppetBrowser)}`)
+    const browserWSEndpoint = PuppetBrowser.browserWSEndpoint; 
+    const browser = await puppeteer.connect({browserWSEndpoint})
+
+    let daysAndTimes = [
+        {day: "tuesday" , times: [["07:00 PM","08:00 PM"],["08:00 PM", "09:00 PM"]]},
+        {day: "sunday" , times: [["11:00 AM","12:00 PM"],["01:00 PM", "02:00 PM"]]}
+    ]
+    
+    let credentials = new Credentials({
+        username: process.env.BL_USERNAME,
+        password: process.env.BL_PASSWORD,
+        cookie: undefined
+    });
+    // const aBrowser = await makeBrowser();
+    
+    try {
+        dateInputMgmt(daysAndTimes); // Handles all date time inputs manipulates daysAndTimes as needed.
+        // logger.info(`Date Time Post setup: ${JSON.stringify(daysAndTimes)}`);
+        // logger.info(`credentials: ${JSON.stringify(credentials)}`)    
+        // logger.info('before loop');
+            
+        const bball = new BasketballBLPuppet(daysAndTimes, {credentials});
+        await bball.makeCookie();
+        logger.info(`Post cookie run: ${JSON.stringify(credentials.cookie)}`)
+        let timeValidator = new TimeValidator(
             daysAndTimes,
-            basketballBLPuppet,
+            bball.triggerReservation,
             {credentials}
         );
-    };
-        
-    logging.info('before loop')
-        
-    let runTv = setInterval(
-        tv,
-        1000
-    )
 
-} catch(e) {
-    logging.error("Error occurred: ", e);
-}
+        
+    
+    } catch(e) {
+        logger.error(`Error occurred (app.js):  ${e}`);
+    } finally {
+        // await aBrowser.close();
+        await browser.close()
+    }
+})();
 

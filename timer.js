@@ -2,15 +2,12 @@ const moment = require('moment-timezone');
 const { assert } = require('./validations');
 const { logger } = require('./logger');
 
-const logging = logger();
-
 class DaysConversion {
     /**
     * Takes current days of week input and outputs next their next dates over the next 7 days.
     */
 
     constructor(targetDay) {
-        console.log("TD: ", targetDay);
         this.targetDay = targetDay.toLowerCase() ; //strings
         this.daysOfWeek = [
             'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
@@ -71,7 +68,6 @@ class DaysConversion {
         let myTimezone = "America/Toronto";
         let myDatetimeFormat= "YYYY/MM/DD";
         date = moment(date).tz(myTimezone).add(days, 'days').startOf('day');
-        console.log('proto 0: ', date)
         return date;
     };
 
@@ -89,23 +85,20 @@ class TimeValidator {
     constructor(allDaysAndTimes, aFunc=undefined, args={}){
         this.aDTs = allDaysAndTimes;
         this.curDate = moment(new Date()).tz('America/Toronto');
-        this.isItTime = this._checkDefinedTimes();
         this.aFunc = aFunc; //class object for the puppet instance
         this.args = args; //objects using destructuing
-
     }
 
-    _checkDefinedTimes(){
+    triggerCheck(){
         /**
          * If date matches, run the puppet to sign in and submit request.
          */
         for(let el of this.aDTs){
-            logging.info(el);
             assert(moment.isMoment(el['momentDate']), "Not a Moment instance");
             if (!this.curDate.isSame(el['momentDate'])){
                 continue;
             } else {
-                this.aFunc(el, this.args);
+                let output = new this.aFunc(el, this.args);
                 break;
             }
         }

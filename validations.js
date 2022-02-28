@@ -1,4 +1,5 @@
 const { builtinModules } = require("module");
+const { logger } = require('./logger');
 
 const assert = function(condition, message) {
     if (!condition)
@@ -12,7 +13,6 @@ const dateInput = (dateList) => {
      * date(arr): Elements in order of Year, Month, Day of Month.
      * times(arr): Array of array of strings. String is formatted "hh:mm AM/PM". List is start time and end time. 
      */
-    console.log("dateList: ", dateList);
     assert(typeof dateList['day'] == 'string', 'Input "day" is not a string type.');
     assert(Array.isArray(dateList['date']), 'Input "date" is not an array.');
     assert(Array.isArray(dateList['times']), 'Input "times" is not an array.');
