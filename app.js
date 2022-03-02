@@ -56,7 +56,7 @@ const { PuppetBrowser } = require('./puppet');
             
         const bball = new BasketballBLPuppet(daysAndTimes, {credentials});
         await bball.makeCookie();
-        logger.info(`Post cookie run: ${JSON.stringify(credentials.cookie)}`)
+        // logger.info(`Post cookie run: ${JSON.stringify(credentials.cookie)}`)
         let timeValidator = new TimeValidator(
             daysAndTimes,
             bball.triggerReservation,
@@ -66,7 +66,7 @@ const { PuppetBrowser } = require('./puppet');
         
     
     } catch(e) {
-        logger.error(`Error occurred (app.js):  ${e}`);
+        logger.error(`Error occurred (app.js):  ${e} \n ${e.stack}`);
     } finally {
         // await aBrowser.close();
         await browser.close()

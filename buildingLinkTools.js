@@ -33,10 +33,10 @@ class BasketballBLPuppet{
 
     makeCookie(){
         return new Promise((resolve, reject) => {
-            logger.info(`Credential Puppet: ${JSON.stringify(PuppetBrowser)}`)
             (async () => {
                 const browserWSEndpoint = PuppetBrowser.browserWSEndpoint;
                 const browser = await puppeteer.connect({browserWSEndpoint})
+                logger.info(`Credential Puppet: ${browser}`)
                 const page = await browser.newPage();
                 try{
                     await page.goto(this.__loginPage);
