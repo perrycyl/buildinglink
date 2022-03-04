@@ -22,11 +22,6 @@ class BasketballBLPuppet{
         this.__bballReserveLink = "https://opusandomegaonthepark.buildinglink.com/V2/Tenant/Amenities/NewReservation.aspx?amenityId=35375&from=0&selectedDate=";
         this.__loginPage = "http://www.opusandomegaonthepark.ca";
     };
-    get triggerReservation (){
-        // Returns bool on successful registration.
-        return this.__makeReservation();
-    }
-
     get hasCookie (){
         return this.credential.cookie ? true: false;
     }
@@ -36,17 +31,15 @@ class BasketballBLPuppet{
             (async () => {
                 const browserWSEndpoint = PuppetBrowser.browserWSEndpoint;
                 const browser = await puppeteer.connect({browserWSEndpoint})
-                logger.info(`Credential Puppet: ${browser}`)
                 const page = await browser.newPage();
                 try{
                     await page.goto(this.__loginPage);
-                    page.waitForSelector('RememberLogin');
-                    await page.type("input[name=Username]", this.credential.username, {delay: 0.5});
-                    await page.type("input[name=Password]", this.credential.password, {delay: 0.5});
+                    await page.waitForSelector('#RememberLogin');
+                    await page.type("input[name=Username]", this.credential.username, {delay: 1});
+                    await page.type("input[name=Password]", this.credential.password, {delay: 3});
+                    await page.waitForSelector('#LoginButton')
                     await page.click("#LoginButton");
-                    await page.waitForNavigation({
-                        waitUntil: 'networkidle0',
-                        });
+                    await page.waitForSelector('#leftMenu')
                     logger.info('Got Milk')
                     const cookies = await page.cookies();
                     this.credential.setCookie = cookies;
@@ -56,25 +49,38 @@ class BasketballBLPuppet{
                     reject(`Error occurred during cookie fetching: ${e}`)
                 } finally {
                     await page.close();
+                    logger.info('End Credential Puppet')
                 }
-                logger.info('End Credential Puppet')
             })();
         });
         
     };
 
-    __makeReservation(){
+    makeReservation(){
         let completed = 0;
+        const browserWSEndpoint = PuppetBrowser.browserWSEndpoint;
+        function* allDateTimes(times){
+            //Args:
+            //  times(arr) - times of daysAndTimes array.
+            yield* times;
+        };
+        const adt = allDateTimes(this.dateTime['times']);
         (async () => {
-            logger.info("Make Reservation - Launch Browser")
+            logger.info(`Make Reservation - Launch Browser \n ${this.dateTime['times']}`)
+            const browser = await puppeteer.connect({browserWSEndpoint})
             
-            for (dt in this.dateTime['times']){
-                const browser = puppeteer.connect({browserWSEndpoint})
+
+            // Transform this block to away for loop returning Promise
+            for (let dt of adt){
+                if (dt.done){
+                    //find next time 
+                }
+                logger.info(`Trying ${dt}`)
                 const page = await browser.newPage();
                 const reserve = async(tIndex) => {
                     const dt = this.dateTime['times'][dt];
                     await page.goto(this.__bballReserveLink);
-                    page.waitForSelector("#ctl00_ContentPlaceHolder1_ctl00_ContentPlaceHolder1_ValidationSummary1Panel");
+                    await page.waitForSelector("#ctl00_ContentPlaceHolder1_ctl00_ContentPlaceHolder1_ValidationSummary1Panel");
                     await page.$eval("#ctl00_ContentPlaceHolder1_StartTimePicker_dateInput",
                         el => el.value = dt[0]);
                     await page.$eval("#ctl00_ContentPlaceHolder1_EndTimePicker_dateInput",
@@ -93,13 +99,13 @@ class BasketballBLPuppet{
                     break
                 }
                 catch (e) {
-                    logger.error("reservation failed.")
+                    logger.error(`Reservation failed. ${e} \n ${e.stack}`)
                     continue
                 } finally {
                     await page.close();
+                    logger.info("Closing Browser");
                 }
             }
-            logger.info("Closing Browser");
             logger.info("End make Reservation - Launch Browser");
             return completed;
         })();

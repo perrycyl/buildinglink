@@ -50,20 +50,16 @@ const { PuppetBrowser } = require('./puppet');
     
     try {
         dateInputMgmt(daysAndTimes); // Handles all date time inputs manipulates daysAndTimes as needed.
-        // logger.info(`Date Time Post setup: ${JSON.stringify(daysAndTimes)}`);
-        // logger.info(`credentials: ${JSON.stringify(credentials)}`)    
-        // logger.info('before loop');
             
         const bball = new BasketballBLPuppet(daysAndTimes, {credentials});
         await bball.makeCookie();
-        // logger.info(`Post cookie run: ${JSON.stringify(credentials.cookie)}`)
+        logger.info(`Got cookies: ${bball.hasCookie}`)
         let timeValidator = new TimeValidator(
             daysAndTimes,
-            bball.triggerReservation,
+            bball.makeReservation,
             {credentials}
         );
-
-        
+        timeValidator.triggerCheck();
     
     } catch(e) {
         logger.error(`Error occurred (app.js):  ${e} \n ${e.stack}`);

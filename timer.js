@@ -96,8 +96,10 @@ class TimeValidator {
         for(let el of this.aDTs){
             assert(moment.isMoment(el['momentDate']), "Not a Moment instance");
             if (!this.curDate.isSame(el['momentDate'])){
+                logger.info(`Not ${el['momentDate']}`)
                 continue;
             } else {
+                logger.info(`Is ${el['momentDate']}`)
                 let output = new this.aFunc(el, this.args);
                 break;
             }
