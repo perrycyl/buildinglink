@@ -1,13 +1,17 @@
 const moment = require('moment-timezone');
 const { assert } = require('./validations');
 const { logger } = require('./logger');
+const { info } = require('console');
 
 class DaysConversion {
     /**
     * Takes current days of week input and outputs next their next dates over the next 7 days.
+    * Options:
+    *   testToday(boo) - takes whatever daysAndTimes user passes and adds today and a set time into the array.
     */
 
-    constructor(targetDay) {
+    constructor(targetDay, options = {}) {
+        this.options = {}
         this.targetDay = targetDay.toLowerCase() ; //strings
         this.daysOfWeek = [
             'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
@@ -20,6 +24,12 @@ class DaysConversion {
             thursday: 4,
             friday: 5,
             saturday: 6
+        }
+        if (Object.keys(options).length !== 0 && options.constructor == Object){
+            if (options['testToday']){
+                logger.info('set testToday')
+                this.options['testToday'] = true
+            }
         }
     };
 
@@ -48,6 +58,11 @@ class DaysConversion {
         let today = new Date();
         const dayToday = today.getDay(); // string
         
+        //Special test cause if options testToday is passed
+        logger.info(`IS TESTTODAY: ${this.options['testToday']}`)
+        if (this.options['testToday']){
+            return this.__Today();
+        }
 
         // Finds the days to count ahead from current day to find the date.
         let dayDiff = this.dtCount[this.targetDay] - dayToday
@@ -64,12 +79,19 @@ class DaysConversion {
     };
 
     __AddDaysToToday(days) {
+        let date = this.__Today();
+        date = date.add(days, 'days').startOf('day');
+        return date;
+    };
+
+    __Today(){
+        // Today in moments using EST.
         let date = new Date();
         let myTimezone = "America/Toronto";
         let myDatetimeFormat= "YYYY/MM/DD";
-        date = moment(date).tz(myTimezone).add(days, 'days').startOf('day');
-        return date;
-    };
+        date = moment(date).tz(myTimezone)
+        return date
+    }
 
 };
 
@@ -82,10 +104,10 @@ class TimeValidator {
      *  aFunc: Puppeteer function.
      *  arg: List of puppeteer arguments.
      */
-    constructor(allDaysAndTimes, aFunc=undefined, args={}){
+    constructor(allDaysAndTimes, callback=undefined, args={}){
         this.aDTs = allDaysAndTimes;
         this.curDate = moment(new Date()).tz('America/Toronto');
-        this.aFunc = aFunc; //class object for the puppet instance
+        this.callback = callback; //class object for the puppet instance
         this.args = args; //objects using destructuing
     }
 
@@ -95,12 +117,12 @@ class TimeValidator {
          */
         for(let el of this.aDTs){
             assert(moment.isMoment(el['momentDate']), "Not a Moment instance");
-            if (!this.curDate.isSame(el['momentDate'])){
+            if (!this.curDate.isSame(el['momentDate'], 'day')){
                 logger.info(`Not ${el['momentDate']}`)
                 continue;
             } else {
                 logger.info(`Is ${el['momentDate']}`)
-                let output = new this.aFunc(el, this.args);
+                let output = this.callback(el,this.args);
                 break;
             }
         }

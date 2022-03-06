@@ -37,9 +37,12 @@ const { PuppetBrowser } = require('./puppet');
     const browser = await puppeteer.connect({browserWSEndpoint})
 
     let daysAndTimes = [
-        {day: "tuesday" , times: [["07:00 PM","08:00 PM"],["08:00 PM", "09:00 PM"]]},
+        {day: "thursday" , times: [["11:00 AM","12:00 PM"],["08:00 PM", "09:00 PM"]]},
         {day: "sunday" , times: [["11:00 AM","12:00 PM"],["01:00 PM", "02:00 PM"]]}
     ]
+
+    let isTest ={}
+    // let isTest = {testToday: true}
     
     let credentials = new Credentials({
         username: process.env.BL_USERNAME,
@@ -49,23 +52,20 @@ const { PuppetBrowser } = require('./puppet');
     // const aBrowser = await makeBrowser();
     
     try {
-        dateInputMgmt(daysAndTimes); // Handles all date time inputs manipulates daysAndTimes as needed.
+        dateInputMgmt(daysAndTimes, isTest); // Handles all date time inputs manipulates daysAndTimes as needed.
+        logger.info(`new DAT: ${JSON.stringify(daysAndTimes)}`)
             
         const bball = new BasketballBLPuppet(daysAndTimes, {credentials});
         await bball.makeCookie();
         logger.info(`Got cookies: ${bball.hasCookie}`)
         let timeValidator = new TimeValidator(
             daysAndTimes,
-            bball.makeReservation,
-            {credentials}
+            bball.makeReservation
         );
         timeValidator.triggerCheck();
     
     } catch(e) {
         logger.error(`Error occurred (app.js):  ${e} \n ${e.stack}`);
-    } finally {
-        // await aBrowser.close();
-        await browser.close()
-    }
+    } 
 })();
 

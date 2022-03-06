@@ -17,8 +17,6 @@ class BasketballBLPuppet{
     constructor(dAT, {credentials}){
         logger.info("Starting BasketballBLPuppet");
         this.credential = credentials;
-        this.dateTime = dAT;
-        logger.info(`DAT: ${JSON.stringify(this.dateTime)}`)
         this.__bballReserveLink = "https://opusandomegaonthepark.buildinglink.com/V2/Tenant/Amenities/NewReservation.aspx?amenityId=35375&from=0&selectedDate=";
         this.__loginPage = "http://www.opusandomegaonthepark.ca";
     };
@@ -27,15 +25,15 @@ class BasketballBLPuppet{
     }
 
     makeCookie(){
-        return new Promise((resolve, reject) => {
-            (async () => {
+        return new Promise(async(resolve, reject) => {
+
                 const browserWSEndpoint = PuppetBrowser.browserWSEndpoint;
                 const browser = await puppeteer.connect({browserWSEndpoint})
                 const page = await browser.newPage();
                 try{
                     await page.goto(this.__loginPage);
                     await page.waitForSelector('#RememberLogin');
-                    await page.type("input[name=Username]", this.credential.username, {delay: 1});
+                    await page.type("input[name=Username]", this.credential.username, {delay: 3});
                     await page.type("input[name=Password]", this.credential.password, {delay: 3});
                     await page.waitForSelector('#LoginButton')
                     await page.click("#LoginButton");
@@ -51,51 +49,76 @@ class BasketballBLPuppet{
                     await page.close();
                     logger.info('End Credential Puppet')
                 }
-            })();
+
         });
         
     };
 
-    makeReservation(){
-        let completed = 0;
-        const browserWSEndpoint = PuppetBrowser.browserWSEndpoint;
-        function* allDateTimes(times){
-            //Args:
-            //  times(arr) - times of daysAndTimes array.
-            yield* times;
-        };
-        const adt = allDateTimes(this.dateTime['times']);
-        (async () => {
-            logger.info(`Make Reservation - Launch Browser \n ${this.dateTime['times']}`)
-            const browser = await puppeteer.connect({browserWSEndpoint})
-            
+    async makeReservation(dateTime){
+        /**
+         * Takes a single date time entry and reserves a court time as requested.
+         * Arg:
+         *  datetime(obj): Single day and time object.
+         */
+        function* getTime(times){
+            yield* times
+        }
 
-            // Transform this block to away for loop returning Promise
-            for (let dt of adt){
-                if (dt.done){
-                    //find next time 
-                }
-                logger.info(`Trying ${dt}`)
-                const page = await browser.newPage();
-                const reserve = async(tIndex) => {
-                    const dt = this.dateTime['times'][dt];
-                    await page.goto(this.__bballReserveLink);
+        const reserve = (page, timeList) => {
+            logger.info(`Reserve: ${typeof timeList}${timeList}`)
+            return new Promise( async (res, rej) => {
+                try {
+                    logger.info(`hello: ${JSON.stringify(this)}`)
+                    logger.info(`Reserve2: ${typeof timeList}${timeList}`)
+                    await page.goto("https://opusandomegaonthepark.buildinglink.com/V2/Tenant/Amenities/NewReservation.aspx?amenityId=35375&from=0&selectedDate=");
                     await page.waitForSelector("#ctl00_ContentPlaceHolder1_ctl00_ContentPlaceHolder1_ValidationSummary1Panel");
                     await page.$eval("#ctl00_ContentPlaceHolder1_StartTimePicker_dateInput",
-                        el => el.value = dt[0]);
+                        (el, timeList) => {
+                            el.setAttribute('value',timeList[0])
+                        },
+                        timeList
+                        ),
                     await page.$eval("#ctl00_ContentPlaceHolder1_EndTimePicker_dateInput",
-                        el => el.value = dt[1]);
+                        (el, timeList) => {
+                            el.setAttribute('value', timeList[1])
+                        },
+                        timeList
+                        );
                     await page.$eval("#ctl00_ContentPlaceHolder1_StartDatePicker_SD",
-                        el => el.value = this.dateTime.date);
+                        (el, dateTime) => {el.setAttribute('value', dateTime['date'])
+                        },
+                        dateTime
+                    );
                     await page.click('#ctl00_ContentPlaceHolder1_FooterSaveButton')
                     let hasChildren = await page.$eval("#ctl00_ContentPlaceHolder1_ValidationSummary1",
                         el => {return el.hasChildNodes()}
                     );
-                    assert(hasChildren, this.dateTime);
-                    completed = 1;
+                    res(hasChildren)
+                } catch (e) {
+                    logger.info(`Error running reserve function: ${e}. \n${e.stack}`);
+                    rej('Reserve went wrong!')
                 }
+            })
+        }
+
+        let completed = 0;
+        const browserWSEndpoint = PuppetBrowser.browserWSEndpoint;
+        logger.info(`BrowserEP: ${browserWSEndpoint}`)
+        logger.info(`MR dt: ${JSON.stringify(dateTime['times'])}`)
+
+        const browser = await puppeteer.connect({browserWSEndpoint})
+
+        try{
+            logger.info(`Browser: ${browser}`)
+            // Transform this block to away for loop returning Promise
+            for (let i=0; i < dateTime['times'].length; i++ ){
+                logger.info(`Trying ${dateTime['times'][i]}`)
+                const page = await browser.newPage();
                 try{
-                    reserve(dt);
+                    const hasChildren = await reserve(page, dateTime['times'][i]);
+                    logger.info(`hasChildren: ${hasChildren}`)
+                    assert(!hasChildren, `Reserve at time (${dateTime['times'][i]}) failed.`);
+                    completed = 1;
                     break
                 }
                 catch (e) {
@@ -103,12 +126,14 @@ class BasketballBLPuppet{
                     continue
                 } finally {
                     await page.close();
-                    logger.info("Closing Browser");
+                    logger.info("Closing Page");
                 }
             }
-            logger.info("End make Reservation - Launch Browser");
             return completed;
-        })();
+        } catch (e){
+            throw new Error(`makeReservation breaks: ${e} \n ${e.stack}`)
+        }
+
 
     };
 }
