@@ -136,19 +136,22 @@ class BasketballBLPuppet{
                 try{
                     const hasChildren = await reserve(page, dateTime['times'][i]);
                     logger.info(`hasChildren: ${hasChildren}`)
-                    assert(!hasChildren, `Reserve at time (${dateTime['times'][i]}) failed.`);
+                    if (hasChildren){
+                        logger.error(`${dateTime['times'][i]} of ${dateTime['day']} is not available`)
+                        continue
+                    }
                     completed = 1;
                     break
                 }
                 catch (e) {
-                    logger.error(`Reservation failed. ${e} \n ${e.stack}`)
+                    logger.error(`Error during reservation process: ${e} \n ${e.stack}`)
                     continue
                 } finally {
-                    // await page.close();
+                    await page.close();
                     logger.info("Closing Page");
                 }
             }
-            return completed;
+            return {success: completed};
         } catch (e){
             throw new Error(`makeReservation breaks: ${e} \n ${e.stack}`)
         }

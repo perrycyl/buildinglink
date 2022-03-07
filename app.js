@@ -29,7 +29,7 @@ const { PuppetBrowser } = require('./puppet');
 //### User Input -  START ###
 
 var dat = [
-    {day: "thursday" , times: [["9:00 AM","10:00 AM"]], options:{}},
+    {day: "friday" , times: [["2:00 PM","3:00 PM"], ["11:00 AM","12:00 PM"]], options:{}},
     {day: "sunday" , times: [["11:00 AM","12:00 PM"],["1:00 PM", "2:00 PM"]], options:{}}
 ];
 

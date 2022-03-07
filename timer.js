@@ -117,18 +117,19 @@ class TimeValidator {
         this.curDate = moment(new Date()).tz('America/Toronto');
         this.callback = callback; //class object for the puppet instance
         this.args = args; //objects using destructuing
+        this.output = []
     }
 
     triggerCheck(){
         /**
          * If date matches, run the puppet to sign in and submit request.
          */
-        
         for(let el of this.aDTs){
-            logger.info(`Is ${el['momentDate']}, test date is ${moment(new Date("2022-03-10")).tz('America/Toronto')}`)
-            let testDate = moment(new Date("2022-03-11").toLocaleString("en-US")).tz('America/Toronto')
+            logger.info(`Is ${el['momentDate']}, test date is ${moment(new Date("2022-03-11").getTime() + 300*60*1000).tz('America/Toronto')}`)
+            let testDate = moment(new Date("2022-03-11").getTime() + 300*60*1000).tz('America/Toronto')
             if (testDate.isSame(el['momentDate'], 'day')){
-                let output = this.callback(el,this.args);
+                let output = this.callback(el,this.args)
+                this.output.push(output);
             } else {
                 logger.info('pass')
             }
