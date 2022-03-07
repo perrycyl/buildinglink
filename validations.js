@@ -14,7 +14,7 @@ const dateInput = (dateList) => {
      * times(arr): Array of array of strings. String is formatted "hh:mm AM/PM". List is start time and end time. 
      */
     assert(typeof dateList['day'] == 'string', 'Input "day" is not a string type.');
-    assert(Array.isArray(dateList['date']), 'Input "date" is not an array.');
+    // assert(Array.isArray(dateList['date']), 'Input "date" is not an array.');
     assert(Array.isArray(dateList['times']), 'Input "times" is not an array.');
     for (let t in dateList['times']){
         __timeInterval(dateList['times'][t][0], dateList['times'][t][1]);
@@ -28,7 +28,7 @@ const __timeInterval = (start, end) => {
     // Time interval cannot be 12pm to 1pm. This time block is invalid.
     // Time needs to be between 9-12pm or 1-9pm
 
-    assert (parseInt(end[1]) - parseInt(start[1]) === 1, "Maximum 1 hr intervals")
+    // assert (parseInt(end[1]) - parseInt(start[1]) === 1, "Maximum 1 hr intervals")
     // if (start[6] == "P"){
     //     let hour = parseInt(start[1]);
     //     console.log("HOUR: ", hour)

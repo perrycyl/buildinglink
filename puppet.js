@@ -8,8 +8,9 @@ var PuppetBrowser = {
             try{
                 this.ready = false;
                 let browser = await puppeteer.launch({
+                    devtools: true,
                     headless:false,
-                    slowMo: 100,
+                    slowMo: 300,
                     args: ['--single-process','--no-zygote', '--no-sandbox']
                 });
                 this.browserWSEndpoint = await browser.wsEndpoint();

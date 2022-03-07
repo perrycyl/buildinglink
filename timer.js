@@ -33,20 +33,28 @@ class DaysConversion {
         }
     };
 
-    static formatDate = (momentDate) => {
+    static formatDate = (momentDate, type) => {
         /**
-         * Arg: Moment date-time instance
-         * Output: Building link date arr in arr of ints yy,mm,dd
-         * Takes a moment date object and formats it to BuildingLink day 
-         * ie [[2022,2,23]]
+         * Arg: 
+         *  momentDate(Moment instance): Moment date-time instance
+         *  type(str): Two types of values. a) Moment.format date string b)
+         *      non-Moment.format string value for special format cases. (ie BLDate to output '[[YYYY/MM/DD]])
+         * 
+         * Notes:
+         * "BLDate": for special building link output of '[[YYYY/MM/DD]]' string
          */
-        let myDatetimeFormat= "YYYY/MM/DD";
         assert (moment.isMoment(momentDate), "formatDate object is not a moment date.");
-        let day = momentDate.format(myDatetimeFormat)
-        day = day.split("/");
-        day = [[day[2], day[1], day[0]]]
-        return day
+        if (type === 'BLDate'){
+            let myDatetimeFormat= "YYYY/MM/DD";
+            let day = momentDate.format(myDatetimeFormat)
+            day = day.split("/");
+            day = JSON.stringify([[day[2], day[1], day[0]]])
+            return day
+        } else {
+            return momentDate.format(type)
+        }
     };
+
 
     get day() {
         return this.__getDates();
@@ -115,17 +123,28 @@ class TimeValidator {
         /**
          * If date matches, run the puppet to sign in and submit request.
          */
+        
         for(let el of this.aDTs){
-            assert(moment.isMoment(el['momentDate']), "Not a Moment instance");
-            if (!this.curDate.isSame(el['momentDate'], 'day')){
-                logger.info(`Not ${el['momentDate']}`)
-                continue;
-            } else {
-                logger.info(`Is ${el['momentDate']}`)
+            logger.info(`Is ${el['momentDate']}, test date is ${moment(new Date("2022-03-10")).tz('America/Toronto')}`)
+            let testDate = moment(new Date("2022-03-11").toLocaleString("en-US")).tz('America/Toronto')
+            if (testDate.isSame(el['momentDate'], 'day')){
                 let output = this.callback(el,this.args);
-                break;
+            } else {
+                logger.info('pass')
             }
         }
+        
+        // for(let el of this.aDTs){
+        //     assert(moment.isMoment(el['momentDate']), "Not a Moment instance");
+        //     if (!this.curDate.isSame(el['momentDate'], 'day')){
+        //         logger.info(`Not ${el['momentDate']}`)
+        //         continue;
+        //     } else {
+        //         logger.info(`Is ${el['momentDate']}`)
+        //         let output = this.callback(el,this.args);
+        //         break;
+        //     }
+        // }
     }
 
 

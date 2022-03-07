@@ -71,31 +71,50 @@ class BasketballBLPuppet{
                     logger.info(`hello: ${JSON.stringify(this)}`)
                     logger.info(`Reserve2: ${typeof timeList}${timeList}`)
                     await page.goto("https://opusandomegaonthepark.buildinglink.com/V2/Tenant/Amenities/NewReservation.aspx?amenityId=35375&from=0&selectedDate=");
-                    await page.waitForSelector("#ctl00_ContentPlaceHolder1_ctl00_ContentPlaceHolder1_ValidationSummary1Panel");
-                    await page.$eval("#ctl00_ContentPlaceHolder1_StartTimePicker_dateInput",
-                        (el, timeList) => {
-                            el.setAttribute('value',timeList[0])
-                        },
-                        timeList
-                        ),
-                    await page.$eval("#ctl00_ContentPlaceHolder1_EndTimePicker_dateInput",
-                        (el, timeList) => {
-                            el.setAttribute('value', timeList[1])
-                        },
-                        timeList
-                        );
-                    await page.$eval("#ctl00_ContentPlaceHolder1_StartDatePicker_SD",
-                        (el, dateTime) => {el.setAttribute('value', dateTime['date'])
-                        },
-                        dateTime
-                    );
-                    await page.click('#ctl00_ContentPlaceHolder1_FooterSaveButton')
                     let hasChildren = await page.$eval("#ctl00_ContentPlaceHolder1_ValidationSummary1",
-                        el => {return el.hasChildNodes()}
+                        el => {return el.children.length > 0 }
+                    );
+                    logger.info(`Has Children 1: ${hasChildren}`)
+                    // click date in calendar corresponding
+                    await page.waitForSelector(`td[title='${dateTime["dateSelector"]}']`);
+                    await page.click(`td[title='${dateTime["dateSelector"]}']`);
+                    await page.waitForTimeout(4000);
+                    
+                    // click time input
+                    await page.waitForSelector(`#ctl00_ContentPlaceHolder1_StartTimePicker_dateInput`);
+                    await page.click(`#ctl00_ContentPlaceHolder1_StartTimePicker_dateInput`);
+                    /**
+                     * we could wait until id="ctl00_ImgLoadingPanelRoller" disappears as a wait for.
+                     */
+                    await page.waitForTimeout(4000);
+
+                    // click time to select
+                    await page.waitForSelector(`.RadCalendarPopup`);
+                    const [element] = await page.$x(`//a[@href='#'][text()='${timeList[0]}']`)
+                    await element.click();
+                    await page.waitForTimeout(8000);
+
+
+                    // await page.$eval("#ctl00_ContentPlaceHolder1_StartTimePicker_dateInput",
+                    //     (el, timeList) => {
+                    //         el.value = timeList[0]
+                    //     },
+                    //     timeList
+                    //     );
+                    // await page.$eval("#ctl00_ContentPlaceHolder1_EndTimePicker_dateInput",
+                    //     (el, timeList) => {
+                    //         el.value = timeList[1]
+                    //     },
+                    //     timeList
+                    //     );
+
+                    await page.click('#ctl00_ContentPlaceHolder1_FooterSaveButton')
+                    hasChildren = await page.$eval("#ctl00_ContentPlaceHolder1_ValidationSummary1",
+                        el => {return el.children.length > 0}
                     );
                     res(hasChildren)
                 } catch (e) {
-                    logger.info(`Error running reserve function: ${e}. \n${e.stack}`);
+                    logger.error(`Error running reserve function: ${e}. \n${e.stack}`);
                     rej('Reserve went wrong!')
                 }
             })
@@ -125,7 +144,7 @@ class BasketballBLPuppet{
                     logger.error(`Reservation failed. ${e} \n ${e.stack}`)
                     continue
                 } finally {
-                    await page.close();
+                    // await page.close();
                     logger.info("Closing Page");
                 }
             }

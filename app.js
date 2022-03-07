@@ -26,23 +26,41 @@ const { PuppetBrowser } = require('./puppet');
  * Sleep
  */
 
-//### USER input ###
+//### User Input -  START ###
+
+var dat = [
+    {day: "thursday" , times: [["9:00 AM","10:00 AM"]], options:{}},
+    {day: "sunday" , times: [["11:00 AM","12:00 PM"],["1:00 PM", "2:00 PM"]], options:{}}
+];
+
+/**
+     * Test options keys:
+     *  manual(dictionary object): Hardcoded date time strings, does not generate Moment Instance. 
+     *      Needs to pass immutable ie manual['options].
+     *  testToday(bool): generates a daysAndTime value for today for testing.
+     */
+var tv = {};
+// var tv = {testToday: true}
+// let tv = {
+//     manual:{
+//         day: "friday",
+//         times:[["02:00 PM","03:00 PM"]],
+//         date: '[[2022/03/11]]',
+//         dateSelector: 'Thursday, March 11, 2022',
+//         momentDate: undefined,
+//         options: {immutable: true}
+//     }
+// };
+
+//### User Input -  End ###
 
 // Code below
-(async () => {
+(async (daysAndTimes, isTest) => {
     // wait for browser to be available
     const waitForBrowser = await PuppetBrowser.create();
     logger.info(`BE: ${JSON.stringify(PuppetBrowser)}`)
     const browserWSEndpoint = PuppetBrowser.browserWSEndpoint; 
     const browser = await puppeteer.connect({browserWSEndpoint})
-
-    let daysAndTimes = [
-        {day: "thursday" , times: [["11:00 AM","12:00 PM"],["08:00 PM", "09:00 PM"]]},
-        {day: "sunday" , times: [["11:00 AM","12:00 PM"],["01:00 PM", "02:00 PM"]]}
-    ]
-
-    let isTest ={}
-    // let isTest = {testToday: true}
     
     let credentials = new Credentials({
         username: process.env.BL_USERNAME,
@@ -67,5 +85,5 @@ const { PuppetBrowser } = require('./puppet');
     } catch(e) {
         logger.error(`Error occurred (app.js):  ${e} \n ${e.stack}`);
     } 
-})();
+})(dat, tv);
 
